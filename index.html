@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duchess International Hospital | Comprehensive Theatre & Endoscopy Competency Examination</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#eef2f7;margin:0}
+.header{background:#002147;color:#fff;padding:20px;text-align:center}
+.logo{height:60px}
+.container{max-width:1100px;margin:20px auto;background:#fff;padding:30px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.08)}
+h1,h2{color:#002147}
+.section{margin-top:30px;padding-top:20px;border-top:1px solid #ddd}
+.question{margin-bottom:15px}
+button{background:#002147;color:#fff;padding:10px 18px;border:none;border-radius:6px;cursor:pointer}
+button:hover{background:#004080}
+input[type=text],input[type=password]{padding:8px;width:100%;margin-bottom:15px}
+.timer{font-weight:bold;color:#b30000;font-size:18px;text-align:right}
+.hidden{display:none}
+.certificate-preview{border:3px double #002147;padding:40px;text-align:center}
+.footer{text-align:center;font-size:12px;margin-top:40px;color:#777}
+</style>
+</head>
+<body oncopy="return false" oncut="return false" onpaste="return false">
+
+<div class="header">
+<img src="logo.jpeg" class="logo" alt="Duchess Logo">
+<h1>Duchess International Hospital</h1>
+<p>Comprehensive Clinical Observership Assessment</p>
+</div>
+
+<div class="container" id="loginSection">
+<h2>Secure Login</h2>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<button onclick="login()">Login to Begin Exam</button>
+<p id="loginError" style="color:red"></p>
+</div>
+
+<div class="container hidden" id="examSection">
+<div class="timer">Time Remaining: <span id="time">90:00</span></div>
+<p><strong>Candidate Name:</strong></p>
+<input type="text" id="candidateName" placeholder="Enter Full Name">
+<div id="quizForm"></div>
+<button onclick="submitExam()">Submit Examination</button>
+<div id="result" style="margin-top:20px;font-weight:bold"></div>
+<button id="downloadBtn" class="hidden" onclick="generatePDF()">Download Institutional Certificate</button>
+<button id="reportBtn" class="hidden" onclick="generateReportPDF()">Download Full Exam Report</button>
+</div>
+
+<script>
+    // Global variable
+    let certificateID = "";
+
+// =============================
+// SINGLE ATTEMPT CONTROL
+// =============================
+
+function hasCompletedExam(username){
+    return localStorage.getItem("exam_completed_" + username) === "true";
+}
+
+function markExamCompleted(username){
+    localStorage.setItem("exam_completed_" + username, "true");
+}
+
+const validUser = "student103";
+const validPass = "duchess2026";
+
+function login(){
+let u=document.getElementById("username").value;
+let p=document.getElementById("password").value;
+
+if(u===validUser && p===validPass){
+
+    if(hasCompletedExam(u)){
+        document.getElementById("loginError").innerText =
+        "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
+        return;
+    }
+
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("examSection").classList.remove("hidden");
+    startTimer(45*60);
+    generateQuestions();
+
+}else{
+document.getElementById("loginError").innerText="Invalid login credentials.";
+}
+}
+
+function startTimer(duration){
+let timer=duration;
+let display=document.getElementById('time');
+let interval=setInterval(function(){
+let minutes=parseInt(timer/60,10);
+let seconds=parseInt(timer%60,10);
+minutes=minutes<10?"0"+minutes:minutes;
+seconds=seconds<10?"0"+seconds:seconds;
+display.textContent=minutes+":"+seconds;
+if(--timer<0){clearInterval(interval);submitExam();}
+},1000);
+}
+
+const questions = [
+
+{q:"A 30-year old female presents with a 2-day history of constant pain over the right upper quadrant (RUQ) associated with vomiting. She is febrile with a positive Murphy’s sign. What is the diagnosis?",
+options:["biliary colic","Cholangitis","Acute cholecystitis","Pancreatitis"],
+answer:2,
+explanation:" The patient’s symptoms are most consistent with acute cholecystitis, which is inflammation of the gallbladder usually caused by obstruction of the cystic duct by a gallstone. It typically presents with persistent right upper quadrant pain, fever, vomiting, and a positive Murphy’s sign, where the patient experiences pain and stops inspiration when the examiner palpates the RUQ. Unlike biliary colic, which causes intermittent pain without fever, acute cholecystitis produces continuous pain lasting more than several hours with systemic signs of inflammation. The absence of jaundice makes cholangitis less likely, and pancreatitis usually presents with epigastric pain radiating to the back rather than localized RUQ tenderness. "},
+
+{q:"A 56-year-old male presents with a week-long history of severe upper abdominal pain. He is very unwell with spiking fever. He has signs of right upper quadrant peritonism with an underlying, vaguely palpable, tender lump. Blood tests reveal an increased white cell count. What is the most appropriate diagnosis?",
+options:["Gall bladder mucocele","Empyema of the gall bladder","Gall bladder perforation","Gallstone ileus"],
+answer:1,
+explanation:" The most appropriate diagnosis is empyema of the gallbladder, which is a severe complication of acute cholecystitis characterized by pus accumulation within the gallbladder due to cystic duct obstruction and bacterial infection. The patient’s severe upper abdominal pain, high spiking fever, marked systemic illness, leukocytosis, and right upper quadrant peritonism with a tender palpable mass strongly suggest a suppurative process in the gallbladder. A gallbladder mucocele usually presents with a distended gallbladder filled with mucus and less severe systemic toxicity, gallbladder perforation typically produces generalized peritonitis rather than a localized tender mass, and gallstone ileus presents with features of intestinal obstruction rather than localized RUQ inflammatory signs."},
+
+{q:"Which of the following statements are true?",
+options:["The approximate water content of bile when it leaves the liver is 50%","The liver excretes bile at an approximate rate of 40 ml/hr","The rate of bile secretion is primarily controlled by secretin","The sole function of the gall bladder is to act as a reservoir for bile"],
+answer:1,
+explanation:"the composition of the bile as it leaves the liver is approximately 97% water, 1-2% bile salts and 1% pigments,cholesterol and fatty acids. The rate of bile secretion is controlled by cholecystokinin (CCK), which is released from the duodenal mucosa. The hepatic bile gets concentrated 5-10 times, with a corresponding increase in bile salts, bile pigments, cholesterol and calcium. The functions of the gall bladder include acting as a reservoir for the bile, concentrating the bile and the secretion of mucus."},
+
+{q:"Choose the correct option",
+options:["CT scan is more sensitive than ultrasound for gallstones.","A plain radiograph can show radio-opaque gallstones in 10% of patients","An end-viewing endoscope is used during endoscopic retrograde cholangiopancreatography (ERCP) to cannulate the ampulla","Magnetic resonance cholangiopancreatography (MRCP) has excellent diagnostic and therapeutic applications in bile duct disorders"],
+answer:1,
+explanation:"Abdominal ultrasound is the initial imaging modality of choice as it is accurate,readily available,inexpensive, non-invasive,invoves no radiation and is quick to perform. It can also give information on the size of the gall bladder, the thickness of the gall bladder wall, presence of inflammation around the gall bladder, size of the common bile duct (CBD) and, occasionally, the presence of stones in the bile duct. A side viewing endoscope is used during an ERCP to help locate the position of the ampulla and help in cannulation. Magnetic resonance cholangiopancreatography (MRCP) is helpful in evaluation and diagnosis of biliary disorders but has no therapeutic application."},
+
+{q:"Concerning the duodenum, the following are false except:",
+options:["The first 2-3 cm has a complete investment of visceral peritoneum","The inferior pancreaticoduodenal artery arises from the gastroduodenal artery","Erosion of posterior duodenal ulcers causes bleeding from the superior pancreaticoduodenal artery","the 4th part of the duodenum is 10 cm long."],
+answer:1,
+explanation:"The duodenum is 25 cm long. The first 2.5 cm is intraperitoneal while the remaining parts are retroperitoneal. The inferior pancreaticoduodenal artery arises from the superior mesenteric artery while the superior pancreaticoduodenal artery is from the gastroduodenal artery."},
+
+{q:"Standard precautions for infection control include:",
+options:["Latex gloves only","Sterile gowns only","Hand hygiene and appropriate PPE","Leaving theatre doors open"],
+answer:2,
+explanation:"Standard precautions include strict hand hygiene and use of appropriate personal protective equipment."},
+
+{q:"In theatre, the sterile field must be broken when:",
+options:["There is contamination","Surgeon chooses","An hour has passed","Lunch arrives"],
+answer:0,
+explanation:"Any contamination invalidates sterility and requires immediate corrective action."},
+
+{q:"Endoscope high-level disinfection requires:",
+options:["Water rinse only","Alcohol wipe only","Approved reprocessing after manual cleaning","Ultraviolet light only"],
+answer:2,
+explanation:"Effective reprocessing requires manual cleaning followed by approved high-level disinfection."},
+
+{q:"Patient fasting guidelines before anesthesia are to prevent:",
+options:["Dehydration","Aspiration during anesthesia","Pain","Infection"],
+answer:1,
+explanation:"Fasting reduces risk of regurgitation and aspiration during induction of anesthesia."},
+
+{q:"The most appropriate response if a patient has not followed fasting guidelines is to:",
+options:["Proceed immediately","Notify anesthesiology and surgeon","Cancel surgery alone","Administer antacids and proceed"],
+answer:1,
+explanation:"The anesthesia team must reassess aspiration risk before proceeding."},
+
+
+{q:"In laparoscopy, safe pneumoperitoneum pressure is generally:",
+options:["5 mmHg","12-15 mmHg","30 mmHg","45 mmHg"],
+answer:1,
+explanation:"12–15 mmHg provides adequate visualization while minimizing cardiopulmonary compromise."},
+
+
+{q:"What is the correct position for a standard colonoscopy?",
+options:["Prone","Right lateral","Supine","Left lateral"],
+answer:3,
+explanation:"Left lateral position facilitates easier colonoscope insertion."},
+
+{q:"A patient reports chest pain and shortness of breath post-procedure. Primary action is:",
+options:["Advise rest","Assess ABCs (Airway, Breathing, Circulation)","Give oral fluids","Dismiss complaint"],
+answer:1,
+explanation:"Airway, breathing, and circulation assessment is priority in emergencies."},
+
+
+{q:"Post-operative pain assessment should be:",
+options:["Ignored","Periodic and documented","Given only at discharge","Done by surgeon alone"],
+answer:1,
+explanation:"Pain assessment must be ongoing and documented."},
+
+{q:"Surgical site infection prevention includes:",
+options:["Maintaining asepsis","Skipping consent","Rapid turnover only","Keeping doors open"],
+answer:0,
+explanation:"Strict aseptic technique reduces infection risk."},
+
+{q:"In theatre administration, priority should be:",
+options:["Patient safety","Equipment purchases only","Coffee breaks","Paperwork delays"],
+answer:0,
+explanation:"Patient safety is the highest institutional priority."},
+
+{q:"Consent must be obtained:",
+options:["Only verbal","Before surgery and documented","From nurse only","After procedure"],
+answer:1,
+explanation:"Valid consent must be obtained and documented before surgery."},
+
+{q:"Endoscopy sedation monitoring must include:",
+options:["Only heart rate","Respiratory rate, oxygen saturation, and level of consciousness","Surgeon’s preference only","None"],
+answer:1,
+explanation:"Sedation monitoring requires respiratory and neurological assessment."},
+
+{q:"Primary infection control in recovery includes:",
+options:["Good hand hygiene","Room lights dimmed","Music volume","Ambient temperature"],
+answer:0,
+explanation:"Hand hygiene prevents cross infection in recovery."},
+
+{q:"Which postoperative complication requires urgent assessment?",
+options:["Stable vitals","Severe wound bleeding","Calm demeanor","Normal pain"],
+answer:1,
+explanation:"Active bleeding requires urgent evaluation."},
+
+{q:"For laparoscopic patients, deep vein thrombosis prevention includes:",
+options:["Early mobilization and compression devices","No mobilization","Ice packs only","None"],
+answer:0,
+explanation:"Early ambulation and compression reduce DVT risk."},
+
+{q:"Endoscopy patient preparation includes:",
+options:["Fasting guidelines and consent confirmation","Only water","Endoscope cleaning only","None"],
+answer:0,
+explanation:"Proper preparation ensures safe sedation and procedure."},
+
+
+{q:"Preoperative patient assessment always includes:",
+options:["Medical history, medications and allergies","Only age","Only weight","None"],
+answer:0,
+explanation:"Comprehensive history reduces perioperative risk."},
+
+{q:"A team brief before procedures ensures:",
+options:["Aligned understanding of plan and risks","Shorter breaks","Fewer staff","No communication"],
+answer:0,
+explanation:"Team brief creates shared situational awareness."},
+
+{q:"Endoscopy quality improvement involves:",
+options:["Ignoring feedback","Reviewing outcomes and reducing complications","Longer waits only","Not tracking KPIs"],
+answer:1,
+explanation:"Quality improvement requires outcome analysis and corrective measures."},
+{q:"The most common histological type of breast cancer is:",
+options:["Invasive lobular carcinoma","Invasive ductal carcinoma","Medullary carcinoma","Mucinous carcinoma"],
+answer:1,
+explanation:"Invasive ductal carcinoma accounts for about 70–80% of all breast cancers."},
+
+{q:"A painless, hard, irregular breast lump with skin dimpling is most suggestive of:",
+options:["Fibroadenoma","Breast cyst","Breast carcinoma","Fat necrosis"],
+answer:2,
+explanation:"Breast carcinoma commonly presents as a painless, hard lump with irregular margins and skin changes such as dimpling."},
+
+{q:"The most common site for breast cancer in the breast is:",
+options:["Upper outer quadrant","Upper inner quadrant","Lower outer quadrant","Subareolar region"],
+answer:0,
+explanation:"The upper outer quadrant contains the largest amount of breast tissue and is the most common site for breast cancer."},
+
+{q:"Which of the following is the most common type of abdominal wall hernia?",
+options:["Femoral hernia","Umbilical hernia","Inguinal hernia","Incisional hernia"],
+answer:2,
+explanation:"Inguinal hernias are the most common abdominal wall hernias, accounting for about 70–75% of cases."},
+
+{q:"A hernia that cannot be reduced but has no signs of bowel obstruction or ischemia is called:",
+options:["Strangulated hernia","Incarcerated hernia","Reducible hernia","Sliding hernia"],
+answer:1,
+explanation:"An incarcerated hernia is irreducible but does not yet have compromised blood supply."},
+
+{q:"The hernia that occurs below the inguinal ligament and is more common in females is:",
+options:["Indirect inguinal hernia","Direct inguinal hernia","Femoral hernia","Spigelian hernia"],
+answer:2,
+explanation:"Femoral hernias occur through the femoral canal below the inguinal ligament and are more common in women."},
+
+{q:"The classical clinical triad of obstructive jaundice includes:",
+options:["Jaundice, fever, right upper quadrant pain","Jaundice, weight loss, anemia","Fever, vomiting, abdominal distension","Jaundice, diarrhea, pruritus"],
+answer:0,
+explanation:"Charcot’s triad (jaundice, fever, and right upper quadrant pain) suggests biliary obstruction often due to cholangitis."},
+
+{q:"Dark urine and pale stools in a jaundiced patient suggest:",
+options:["Hemolytic jaundice","Hepatocellular jaundice","Obstructive jaundice","Neonatal jaundice"],
+answer:2,
+explanation:"Obstructive jaundice prevents bile from reaching the intestine, leading to pale stools and dark urine due to conjugated bilirubin excretion."},
+
+{q:"The most common cause of obstructive jaundice worldwide is:",
+options:["Pancreatic cancer","Gallstones in the common bile duct","Cholangiocarcinoma","Primary sclerosing cholangitis"],
+answer:1,
+explanation:"Choledocholithiasis (stones in the common bile duct) is the most common cause of obstructive jaundice."},
+
+{q:"Courvoisier’s law states that:",
+options:["A palpable gallbladder with jaundice is unlikely due to gallstones","All gallstones cause jaundice","Gallstones always cause pain","Pancreatic cancer never causes jaundice"],
+answer:0,
+explanation:"Courvoisier’s law states that a palpable, non-tender gallbladder in a jaundiced patient is unlikely due to gallstones and suggests malignancy such as pancreatic cancer."},
+{q:"The primary indication for Percutaneous Endoscopic Gastrostomy (PEG) tube insertion is:",
+options:["Short-term postoperative feeding","Long-term enteral nutrition in patients with a functional gastrointestinal tract","Relief of intestinal obstruction","Treatment of severe gastroesophageal reflux"],
+answer:1,
+explanation:"PEG tubes are primarily used for long-term enteral feeding in patients who cannot swallow but have a functioning gastrointestinal tract."},
+
+{q:"Which of the following is an absolute contraindication to PEG tube insertion?",
+options:["Ascites","Severe coagulopathy","Previous abdominal surgery","Mild gastritis"],
+answer:1,
+explanation:"Severe uncorrected coagulopathy is an absolute contraindication because of the high risk of bleeding during PEG insertion."},
+
+{q:"The most commonly used technique for PEG tube placement is:",
+options:["Push technique","Pull technique","Introducer technique","Radiologic technique"],
+answer:1,
+explanation:"The pull technique (Ponsky-Gauderer method) is the most commonly used method for PEG tube insertion."},
+
+{q:"The celiac trunk typically arises from which vertebral level?",
+options:["T10","T12","L1","L2"],
+answer:1,
+explanation:"The celiac trunk usually arises from the abdominal aorta at the level of the T12 vertebra."},
+
+{q:"Which of the following arteries is NOT a direct branch of the celiac trunk?",
+options:["Left gastric artery","Common hepatic artery","Splenic artery","Superior mesenteric artery"],
+answer:3,
+explanation:"The celiac trunk gives rise to the left gastric, splenic, and common hepatic arteries. The superior mesenteric artery arises separately from the abdominal aorta."},
+
+{q:"The most common type of colonic polyp with malignant potential is:",
+options:["Hyperplastic polyp","Inflammatory polyp","Adenomatous polyp","Hamartomatous polyp"],
+answer:2,
+explanation:"Adenomatous polyps are premalignant lesions and are the most common type associated with colorectal cancer."},
+
+{q:"Which histologic type of colonic polyp has the highest risk of malignant transformation?",
+options:["Tubular adenoma","Villous adenoma","Hyperplastic polyp","Juvenile polyp"],
+answer:1,
+explanation:"Villous adenomas have the highest risk of malignant transformation, especially when large."},
+
+{q:"The most appropriate initial treatment for a localized, resectable colon cancer is:",
+options:["Chemotherapy alone","Radiotherapy","Surgical resection with adequate margins and lymphadenectomy","Endoscopic polypectomy only"],
+answer:2,
+explanation:"The standard treatment for localized colon cancer is surgical resection of the affected segment with lymph node removal."},
+
+{q:"Which of the following tumor markers is commonly used in the follow-up of colon cancer?",
+options:["AFP","CA-125","CEA","PSA"],
+answer:2,
+explanation:"Carcinoembryonic antigen (CEA) is commonly used to monitor recurrence after treatment of colorectal cancer."},
+
+{q:"For obstructing left-sided colon cancer, a common emergency surgical option is:",
+options:["Hartmann’s procedure","Appendectomy","Cholecystectomy","Pancreaticoduodenectomy"],
+answer:0,
+explanation:"Hartmann’s procedure involves resection of the diseased colon with formation of an end colostomy and closure of the rectal stump, commonly used in emergency settings."},
+{q:"The most common site for development of pressure ulcers in bedridden patients is:",
+options:["Occiput","Sacrum","Scapula","Elbow"],
+answer:1,
+explanation:"The sacrum is the most common site for pressure ulcers in bedridden patients due to prolonged pressure over this bony prominence."},
+
+{q:"Which of the following is the most effective preventive measure for pressure ulcers?",
+options:["Daily antibiotic use","Frequent repositioning of the patient","Restricting fluid intake","Applying topical antiseptics routinely"],
+answer:1,
+explanation:"Regular repositioning (every 2 hours) relieves pressure on bony prominences and is the most effective preventive strategy."},
+
+{q:"The most reliable bedside method for confirming correct placement of a nasogastric (NG) tube is:",
+options:["Auscultation over the stomach during air insufflation","Checking the color of aspirate","Chest X-ray confirmation","Patient coughing"],
+answer:2,
+explanation:"Chest X-ray is considered the gold standard for confirming correct NG tube placement, especially before feeding."},
+
+{q:"A common complication of nasogastric tube insertion is:",
+options:["Pneumothorax","Esophageal perforation","Aspiration pneumonia","Splenic rupture"],
+answer:2,
+explanation:"Misplacement of the NG tube into the airway can lead to aspiration pneumonia, a common complication."},
+
+{q:"During urethral catheterization in a male patient, resistance at the level of the prostate should be managed by:",
+options:["Applying force to advance the catheter","Removing the catheter and trying again with gentle technique or a coude catheter","Inflating the balloon immediately","Using a larger catheter"],
+answer:1,
+explanation:"Resistance may be due to prostatic enlargement; gentle technique or use of a coude-tipped catheter is recommended rather than forcing the catheter."}
+];
+
+function generateCertificateID(){
+const now = new Date();
+const year = now.getFullYear();
+const random = Math.floor(100000 + Math.random() * 900000);
+return `DIH-SURGERY-${year}-${random}`;
+}
+
+function generateQuestions(){
+let container=document.getElementById('quizForm');
+questions.forEach((item,index)=>{
+let div=document.createElement('div');
+div.classList.add('question');
+div.innerHTML=`<p>${index+1}. ${item.q}</p>`;
+item.options.forEach((opt,i)=>{
+div.innerHTML+=`<label><input type='radio' name='q${index}' value='${i}'> ${opt}</label><br>`;
+});
+container.appendChild(div);
+});
+}
+
+let finalScore=0;
+let candidateAnswers = [];
+function submitExam(){
+let score=0;
+questions.forEach((item,index)=>{
+let selected=document.querySelector(`input[name='q${index}']:checked`);
+
+if(selected){
+    let selectedValue = parseInt(selected.value);
+    candidateAnswers[index] = selectedValue;
+
+    if(selectedValue === item.answer){score++;}
+}else{
+    candidateAnswers[index] = null;
+}
+});
+finalScore=score;
+let percent=(finalScore/questions.length)*100;
+let level="";
+if(percent>=85){
+level="EXCELLENT – Exceptional Understanding and Engagement";
+}
+else if(percent>=70){
+level="VERY GOOD – Strong Clinical Understanding";
+}
+else if(percent>=60){
+level="GOOD – Adequate Understanding with Continued Learning Needed";
+}
+else{
+level="NOT SATISFACTORY – Basic Exposure Achieved";
+}
+document.getElementById('downloadBtn').classList.remove('hidden');
+document.getElementById('result').innerHTML=`Final Score: ${score}/50 (${percent.toFixed(1)}%)<br>Performance Level: ${level}`;
+document.getElementById('reportBtn').classList.remove('hidden');
+// Lock exam permanently for this user
+markExamCompleted(validUser);
+
+// Disable all inputs after submission
+document.querySelectorAll("input").forEach(el => el.disabled = true);
+// Disable only exam radio inputs
+document.querySelectorAll("input[type='radio']").forEach(el => el.disabled = true);
+
+// Disable submit button only
+document.querySelector("button[onclick='submitExam()']").disabled = true;
+certificateID = generateCertificateID();
+}
+
+async function generatePDF(){
+const { jsPDF } = window.jspdf;
+const doc=new jsPDF();
+let name=document.getElementById('candidateName').value;
+let percent=(finalScore/50)*100;
+let level="";
+if(percent>=85){
+level="EXCELLENT – Exceptional Understanding and Engagement";
+}
+else if(percent>=70){
+level="VERY GOOD – Strong Clinical Understanding";
+}
+else if(percent>=60){
+level="GOOD – Adequate Understanding with Continued Learning Needed";
+}
+else{
+level="NOT SATISFACTORY – Basic Exposure Achieved";
+}
+
+
+
+// Elegant Certificate Layout
+
+doc.setLineWidth(1.5);
+doc.rect(10,10,190,277);
+doc.setFontSize(22);
+doc.text("DUCHESS INTERNATIONAL HOSPITAL",105,40,null,null,"center");
+doc.setFontSize(16);
+doc.text("DEPARTMENT OF SURGERY",105,50,null,null,"center");
+doc.setFontSize(14);
+doc.text("CERTIFICATE OF CLINICAL OBSERVERSHIP",105,65,null,null,"center");
+doc.setFontSize(12);
+doc.text(`This certifies that`,105,80,null,null,"center");
+doc.setFontSize(16);
+doc.text(name,105,95,null,null,"center");
+doc.setFontSize(12);
+doc.text("has successfully completed a Clinical Observership at the Surgical Unit.",105,110,null,null,"center");
+doc.text(`Final Score: ${percent.toFixed(1)}%`,105,125,null,null,"center");
+doc.text(`Remarks: ${level}`,105,140,null,null,"center");
+doc.text("Assessed by: Dr. ____________________________",20,200);
+doc.text("Signature: ____________________________",20,215);
+doc.text("Date: ____________________________",20,230);
+doc.setFontSize(10);
+doc.text(`Certificate ID: ${certificateID}`,20,250);
+
+doc.save("Duchess_Observership_Certificate.pdf");
+}
+
+async function generateReportPDF(){
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
+let y = 10;
+
+doc.setFontSize(14);
+doc.text("DUCHESS INTERNATIONAL HOSPITAL",10,y);
+y+=10;
+doc.setFontSize(12);
+doc.text(`Candidate: ${document.getElementById('candidateName').value}`,10,y);
+y+=8;
+doc.text(`Certificate ID: ${certificateID}`,10,y);
+y+=8;
+doc.text(`Final Score: ${finalScore}/50`,10,y);
+y+=12;
+
+questions.forEach((item,index)=>{
+if(y>270){doc.addPage(); y=10;}
+
+doc.setFontSize(11);
+doc.text(`${index+1}. ${item.q}`,10,y);
+y+=6;
+
+item.options.forEach((opt,i)=>{
+let prefix = "";
+if(i === item.answer){
+    prefix += "(Correct) ";
+}
+if(candidateAnswers[index] === i){
+    prefix += "(Selected) ";
+}
+doc.text(`- ${prefix}${opt}`,15,y);
+y+=5;
+});
+
+doc.setFontSize(10);
+doc.text(`Explanation: ${item.explanation}`,15,y);
+y+=8;
+});
+
+doc.save("Duchess_Full_Exam_Report.pdf");
+}
+
+
+// Anti-cheating: disable right-click
+window.addEventListener('contextmenu',function(e){e.preventDefault();});
+
+window.addEventListener("load", function(){
+    if(hasCompletedExam(validUser)){
+        document.getElementById("loginSection").innerHTML =
+        "<h2>Access Denied</h2><p>This candidate has already completed the competency examination. Re-attempts are not allowed.</p>";
+    }
+});
+</script>
+
+<div class="footer">© Duchess International Hospital | Surgical Excellence & Patient Safety</div>
+
+</body>
+</html>
