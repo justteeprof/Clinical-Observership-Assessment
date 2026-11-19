@@ -65,8 +65,17 @@ function markExamCompleted(username){
     localStorage.setItem("exam_completed_" + username, "true");
 }
 
-const validUser = "student208";
+const validUser = "student101";
 const validPass = "duchess2026";
+const validUser2 = "student102";
+const validPass2 = "duchess2026";
+const validUser3 = "student103";
+const validPass3 = "duchess2026";
+const validUser4 = "student104";
+const validPass4 = "duchess2026";
+const validUser5 = "student105";
+const validPass5 = "duchess2026";    
+    
 
 function login(){
 let u=document.getElementById("username").value;
@@ -85,7 +94,70 @@ if(u===validUser && p===validPass){
     startTimer(45*60);
     generateQuestions();
 
-}else{
+}
+
+elif(u===validUser2 && p===validPass2){
+
+    if(hasCompletedExam(u)){
+        document.getElementById("loginError").innerText =
+        "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
+        return;
+    }
+
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("examSection").classList.remove("hidden");
+    startTimer(45*60);
+    generateQuestions();
+
+}  
+
+if(u===validUser3 && p===validPass3){
+
+    if(hasCompletedExam(u)){
+        document.getElementById("loginError").innerText =
+        "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
+        return;
+    }
+
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("examSection").classList.remove("hidden");
+    startTimer(45*60);
+    generateQuestions();
+
+}
+
+ if(u===validUser4 && p===validPass4){
+
+    if(hasCompletedExam(u)){
+        document.getElementById("loginError").innerText =
+        "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
+        return;
+    }
+
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("examSection").classList.remove("hidden");
+    startTimer(45*60);
+    generateQuestions();
+
+}
+
+if(u===validUser5 && p===validPass5){
+
+    if(hasCompletedExam(u)){
+        document.getElementById("loginError").innerText =
+        "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
+        return;
+    }
+
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("examSection").classList.remove("hidden");
+    startTimer(45*60);
+    generateQuestions();
+
+}     
+
+
+else{
 document.getElementById("loginError").innerText="Invalid login credentials.";
 }
 }
