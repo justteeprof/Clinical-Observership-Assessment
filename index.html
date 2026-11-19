@@ -65,94 +65,44 @@ function markExamCompleted(username){
     localStorage.setItem("exam_completed_" + username, "true");
 }
 
-// Candidate credentials (temporary client-side implementation).
-// IMPORTANT: These credentials are visible in page source. For a real examination,
-// move authentication and completion checks to a secure server-side backend.
-const candidates = {
-    student101: "duchess2026",
-    student102: "duchess2026",
-    student103: "duchess2026",
-    student104: "duchess2026",
-    student105: "duchess2026"
-};
+const validUser = "student701";
+const validPass = "duchess2026";
+   
+    
 
-let currentUsername = "";
-let examSubmitted = false;
-let timerInterval = null;
+function login(){
+let u=document.getElementById("username").value;
+let p=document.getElementById("password").value;
 
-function hasCompletedExam(username) {
-    return localStorage.getItem("exam_completed_" + username) === "true";
-}
+if(u===validUser && p===validPass){
 
-function markExamCompleted(username) {
-    localStorage.setItem("exam_completed_" + username, "true");
-}
-
-function login() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
-    const error = document.getElementById("loginError");
-
-    error.textContent = "";
-
-    if (!username || !password) {
-        error.textContent = "Please enter both your username and password.";
+    if(hasCompletedExam(u)){
+        document.getElementById("loginError").innerText =
+        "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
         return;
     }
-
-    if (!Object.prototype.hasOwnProperty.call(candidates, username) ||
-        candidates[username] !== password) {
-        error.textContent = "Invalid login credentials.";
-        return;
-    }
-
-    if (hasCompletedExam(username)) {
-        error.textContent =
-            "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
-        return;
-    }
-
-    currentUsername = username;
-    examSubmitted = false;
 
     document.getElementById("loginSection").classList.add("hidden");
     document.getElementById("examSection").classList.remove("hidden");
-
-    // The display says 90 minutes, so the examination now starts at 90 minutes.
+    startTimer(45*60);
     generateQuestions();
-    startTimer(90 * 60);
+
+}else{
+document.getElementById("loginError").innerText="Invalid login credentials.";
+}
 }
 
-function startTimer(duration) {
-    if (timerInterval) clearInterval(timerInterval);
-
-    let timer = duration;
-    const display = document.getElementById("time");
-
-    function updateDisplay() {
-        const minutes = Math.floor(timer / 60);
-        const seconds = timer % 60;
-        display.textContent =
-            String(minutes).padStart(2, "0") + ":" +
-            String(seconds).padStart(2, "0");
-    }
-
-    updateDisplay();
-
-    timerInterval = setInterval(function () {
-        if (examSubmitted) {
-            clearInterval(timerInterval);
-            return;
-        }
-
-        timer -= 1;
-        updateDisplay();
-
-        if (timer <= 0) {
-            clearInterval(timerInterval);
-            submitExam(true);
-        }
-    }, 1000);
+function startTimer(duration){
+let timer=duration;
+let display=document.getElementById('time');
+let interval=setInterval(function(){
+let minutes=parseInt(timer/60,10);
+let seconds=parseInt(timer%60,10);
+minutes=minutes<10?"0"+minutes:minutes;
+seconds=seconds<10?"0"+seconds:seconds;
+display.textContent=minutes+":"+seconds;
+if(--timer<0){clearInterval(interval);submitExam();}
+},1000);
 }
 
 const questions = [
@@ -418,7 +368,6 @@ return `DIH-SURGERY-${year}-${random}`;
 
 function generateQuestions(){
 let container=document.getElementById('quizForm');
-container.innerHTML = '';
 questions.forEach((item,index)=>{
 let div=document.createElement('div');
 div.classList.add('question');
@@ -432,73 +381,56 @@ container.appendChild(div);
 
 let finalScore=0;
 let candidateAnswers = [];
-function submitExam(isAutoSubmit = false) {
-    if (examSubmitted) return;
+function submitExam(){
+let score=0;
+questions.forEach((item,index)=>{
+let selected=document.querySelector(`input[name='q${index}']:checked`);
 
-    const candidateNameInput = document.getElementById("candidateName");
-    const candidateName = candidateNameInput.value.trim();
+if(selected){
+    let selectedValue = parseInt(selected.value);
+    candidateAnswers[index] = selectedValue;
 
-    if (!isAutoSubmit && !candidateName) {
-        alert("Please enter the candidate's full name before submitting.");
-        candidateNameInput.focus();
-        return;
-    }
+    if(selectedValue === item.answer){score++;}
+}else{
+    candidateAnswers[index] = null;
+}
+});
+finalScore=score;
+let percent=(finalScore/questions.length)*100;
+let level="";
+if(percent>=85){
+level="EXCELLENT – Exceptional Understanding and Engagement";
+}
+else if(percent>=70){
+level="VERY GOOD – Strong Clinical Understanding";
+}
+else if(percent>=60){
+level="GOOD – Adequate Understanding with Continued Learning Needed";
+}
+else{
+level="NOT SATISFACTORY – Basic Exposure Achieved";
+}
+document.getElementById('downloadBtn').classList.remove('hidden');
+document.getElementById('result').innerHTML=`Final Score: ${score}/50 (${percent.toFixed(1)}%)<br>Performance Level: ${level}`;
+document.getElementById('reportBtn').classList.remove('hidden');
+// Lock exam permanently for this user
+markExamCompleted(validUser);
 
-    if (!currentUsername) {
-        alert("Your session could not be identified. Please log in again.");
-        return;
-    }
+// Disable all inputs after submission
+document.querySelectorAll("input").forEach(el => el.disabled = true);
+// Disable only exam radio inputs
+document.querySelectorAll("input[type='radio']").forEach(el => el.disabled = true);
 
-    examSubmitted = true;
-    if (timerInterval) clearInterval(timerInterval);
-
-    let score = 0;
-    candidateAnswers = [];
-
-    questions.forEach((item, index) => {
-        const selected = document.querySelector(`input[name='q${index}']:checked`);
-        const selectedValue = selected ? parseInt(selected.value, 10) : null;
-
-        candidateAnswers[index] = selectedValue;
-        if (selectedValue === item.answer) score++;
-    });
-
-    finalScore = score;
-    const totalQuestions = questions.length;
-    const percent = totalQuestions ? (score / totalQuestions) * 100 : 0;
-
-    let level = "";
-    if (percent >= 85) {
-        level = "EXCELLENT – Exceptional Understanding and Engagement";
-    } else if (percent >= 70) {
-        level = "VERY GOOD – Strong Clinical Understanding";
-    } else if (percent >= 60) {
-        level = "GOOD – Adequate Understanding with Continued Learning Needed";
-    } else {
-        level = "NOT SATISFACTORY – Basic Exposure Achieved";
-    }
-
-    document.getElementById("downloadBtn").classList.remove("hidden");
-    document.getElementById("reportBtn").classList.remove("hidden");
-    document.getElementById("result").innerHTML =
-        `Final Score: ${score}/${totalQuestions} (${percent.toFixed(1)}%)<br>` +
-        `Performance Level: ${level}` +
-        (isAutoSubmit ? "<br>Time expired. Your examination was submitted automatically." : "");
-
-    // This is only a browser-local restriction, not tamper-proof authentication.
-    markExamCompleted(currentUsername);
-
-    document.querySelectorAll("#examSection input, #examSection button[onclick='submitExam()']")
-        .forEach(el => el.disabled = true);
-
-    certificateID = generateCertificateID();
+// Disable submit button only
+document.querySelector("button[onclick='submitExam()']").disabled = true;
+certificateID = generateCertificateID();
 }
 
 async function generatePDF(){
 const { jsPDF } = window.jspdf;
 const doc=new jsPDF();
 let name=document.getElementById('candidateName').value;
-let percent=questions.length ? (finalScore/questions.length)*100 : 0;
+let percent=(finalScore/50)*100;
 let level="";
 if(percent>=85){
 level="EXCELLENT – Exceptional Understanding and Engagement";
@@ -555,7 +487,7 @@ doc.text(`Candidate: ${document.getElementById('candidateName').value}`,10,y);
 y+=8;
 doc.text(`Certificate ID: ${certificateID}`,10,y);
 y+=8;
-doc.text(`Final Score: ${finalScore}/${questions.length}`,10,y);
+doc.text(`Final Score: ${finalScore}/50`,10,y);
 y+=12;
 
 questions.forEach((item,index)=>{
@@ -589,15 +521,11 @@ doc.save("Duchess_Full_Exam_Report.pdf");
 // Anti-cheating: disable right-click
 window.addEventListener('contextmenu',function(e){e.preventDefault();});
 
-window.addEventListener("load", function () {
-    // Do not block the whole login page based on one candidate's completion.
-    // Completion is checked after the candidate enters their own credentials.
-    document.getElementById("username").addEventListener("keydown", function (event) {
-        if (event.key === "Enter") login();
-    });
-    document.getElementById("password").addEventListener("keydown", function (event) {
-        if (event.key === "Enter") login();
-    });
+window.addEventListener("load", function(){
+    if(hasCompletedExam(validUser)){
+        document.getElementById("loginSection").innerHTML =
+        "<h2>Access Denied</h2><p>This candidate has already completed the competency examination. Re-attempts are not allowed.</p>";
+    }
 });
 </script>
 
