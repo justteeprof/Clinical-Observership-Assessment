@@ -57,12 +57,22 @@ input[type=text],input[type=password]{padding:8px;width:100%;margin-bottom:15px}
 // SINGLE ATTEMPT CONTROL
 // =============================
 
-function hasCompletedExam(username){
-    return localStorage.getItem("exam_completed_" + username) === "true";
+function hasCompletedExam(username) {
+    try {
+        return localStorage.getItem("exam_completed_" + username) === "true";
+    } catch (error) {
+        console.error("Unable to read examination completion status:", error);
+        return false;
+    }
 }
 
-function markExamCompleted(username){
-    localStorage.setItem("exam_completed_" + username, "true");
+function markExamCompleted(username) {
+    try {
+        localStorage.setItem("exam_completed_" + username, "true");
+    } catch (error) {
+        console.error("Unable to save examination completion status:", error);
+        alert("Warning: this browser could not save the completion lock. Please inform the examination administrator.");
+    }
 }
 
 const validUser = "student801";
@@ -70,26 +80,34 @@ const validPass = "duchess2026";
    
     
 
-function login(){
-let u=document.getElementById("username").value;
-let p=document.getElementById("password").value;
+function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const errorMessage = document.getElementById("loginError");
 
-if(u===validUser && p===validPass){
+    errorMessage.textContent = "";
 
-    if(hasCompletedExam(u)){
-        document.getElementById("loginError").innerText =
-        "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
+    if (username === "" || password === "") {
+        errorMessage.textContent = "Please enter both username and password.";
+        return;
+    }
+
+    if (username !== validUser || password !== validPass) {
+        errorMessage.textContent = "Invalid username or password. Please check your details.";
+        return;
+    }
+
+    if (hasCompletedExam(username)) {
+        errorMessage.textContent =
+            "This candidate has already completed the competency examination. Multiple attempts are not permitted.";
         return;
     }
 
     document.getElementById("loginSection").classList.add("hidden");
     document.getElementById("examSection").classList.remove("hidden");
-    startTimer(45*60);
-    generateQuestions();
 
-}else{
-document.getElementById("loginError").innerText="Invalid login credentials.";
-}
+    generateQuestions();
+    startTimer(90 * 60);
 }
 
 function startTimer(duration){
@@ -368,6 +386,7 @@ return `DIH-SURGERY-${year}-${random}`;
 
 function generateQuestions(){
 let container=document.getElementById('quizForm');
+container.innerHTML = '';
 questions.forEach((item,index)=>{
 let div=document.createElement('div');
 div.classList.add('question');
@@ -381,7 +400,10 @@ container.appendChild(div);
 
 let finalScore=0;
 let candidateAnswers = [];
+let examSubmitted = false;
 function submitExam(){
+if (examSubmitted) return;
+examSubmitted = true;
 let score=0;
 questions.forEach((item,index)=>{
 let selected=document.querySelector(`input[name='q${index}']:checked`);
@@ -521,11 +543,15 @@ doc.save("Duchess_Full_Exam_Report.pdf");
 // Anti-cheating: disable right-click
 window.addEventListener('contextmenu',function(e){e.preventDefault();});
 
-window.addEventListener("load", function(){
-    if(hasCompletedExam(validUser)){
-        document.getElementById("loginSection").innerHTML =
-        "<h2>Access Denied</h2><p>This candidate has already completed the competency examination. Re-attempts are not allowed.</p>";
-    }
+window.addEventListener("load", function () {
+    // Keep the login form visible. The candidate's completion status is
+    // checked inside login() after the username has been entered.
+    document.getElementById("username").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") login();
+    });
+    document.getElementById("password").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") login();
+    });
 });
 </script>
 
